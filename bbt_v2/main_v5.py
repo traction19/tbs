@@ -445,7 +445,16 @@ def booking_list_page() -> None:
         for _, row in df.iterrows():
             start_dt = f"{row['tanggal_booking']}T{row['waktu_mulai']}"
             end_dt = f"{row['tanggal_booking']}T{row['waktu_selesai']}"
-            color = "#FF6B6B" if row["ruang_meeting"] == "Breakout Traction" else "#4ECDC4"
+            ruang = row["ruang_meeting"].strip()  # antisipasi spasi tak sengaja
+            if ruang in ["Breakout Traction", "Breakout DigiAds", "Coordination"]:
+                color = "#FF6B6B"  # merah
+            elif ruang in ["Cozy 19.2", "Cozy 19.3", "Cozy 19.4"]:
+                color = "#4ECDC4"  # hijau toska
+            elif ruang in ["Dedication 1", "Dedication 2", "Dedication 3", "Dedication 5", "Dedication 6"]:
+                color = "#4DA3FF"  # biru
+            else:
+                color = "#CCCCCC"  # fallback (abu netral, jika nama ruang tak terdaftar)
+
             events.append(
                 {
                     "id": row["id"],
