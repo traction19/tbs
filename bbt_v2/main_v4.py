@@ -22,7 +22,7 @@ import uuid
 # 1. KONFIGURASI HALAMAN & CSS
 # ──────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Meeting Room Booking",
+    page_title="Booking Meeting Room Warga PnT TSO 19th Floor",
     page_icon="🏢",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -177,7 +177,7 @@ def admin_login_page() -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 def booking_form_page() -> None:
     st.markdown(
-        '<div class="main-header"><h1>📝 Form Booking Meeting Room</h1></div>',
+        '<div class="main-header"><h1>📝 Booking Meeting Room Warga PnT TSO 19th Floor</h1></div>',
         unsafe_allow_html=True,
     )
 
@@ -197,7 +197,7 @@ def booking_form_page() -> None:
         nama = st.text_input("Nama Pemesan")
         subdir = st.text_input("Sub Direktorat")
         floor = st.selectbox("Lantai", ["19"])
-        ruang_meeting = st.selectbox("Ruang Meeting", ["Breakout Traction", "Cozy 19.2"])
+        ruang_meeting = st.selectbox("Ruang Meeting", ["Breakout Traction","Breakout DigiAds","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"])
         booking_date = st.date_input("Tanggal Booking", value=date.today())
         col1, col2 = st.columns(2)
         with col1:
