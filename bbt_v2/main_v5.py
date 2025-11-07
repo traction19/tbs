@@ -295,7 +295,7 @@ def booking_weekly_page() -> None:
         st.stop()
 
     # Available rooms - reuse same list as main form (ensure consistency)
-    ruang_options = ["Brea...dication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"]
+    ruang_options = ["Breakout Traction", "Breakout DigiAds", "Dedication 1", "Dedication 2", "Dedication 3", "Dedication 5", "Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"]
 
     with st.form("weekly_booking_form", clear_on_submit=False):
         nama = st.text_input("Nama Pemesan")
