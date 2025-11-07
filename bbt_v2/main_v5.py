@@ -62,56 +62,59 @@ load_css()
 # 2. INISIALISASI SUPABASE
 # ──────────────────────────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
-
 def init_supabase() -> Client | None:
     """
-    Initialize Supabase client.
-    Use SUPABASE_SERVICE_KEY (service_role) if available in env vars (recommended for server-side).
-    Otherwise fallback to SUPABASE_ANON_KEY if present.
+    Inisialisasi koneksi Supabase.
+    - Gunakan SUPABASE_SERVICE_KEY (service_role) jika tersedia untuk bypass RLS.
+    - Jika tidak ada, fallback ke SUPABASE_ANON_KEY (tunduk pada RLS policy).
     """
     import os
-    url = os.environ.get("SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL") or os.environ.get("REACT_APP_SUPABASE_URL")
-    service_key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-    anon_key = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_KEY") or os.environ.get("SUPABASE_ANON")
+    from supabase import create_client
+
+    # Coba ambil environment variable
+    url = (
+        os.environ.get("SUPABASE_URL")
+        or os.environ.get("NEXT_PUBLIC_SUPABASE_URL")
+        or os.environ.get("REACT_APP_SUPABASE_URL")
+    )
+    service_key = (
+        os.environ.get("SUPABASE_SERVICE_KEY")
+        or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    )
+    anon_key = (
+        os.environ.get("SUPABASE_ANON_KEY")
+        or os.environ.get("SUPABASE_KEY")
+        or os.environ.get("SUPABASE_ANON")
+    )
 
     if not url:
-        st.error("SUPABASE_URL tidak ditemukan di environment variables. Silakan set SUPABASE_URL.")
+        st.error("❌ SUPABASE_URL tidak ditemukan di environment variables.")
         return None
 
-    # Prefer service role key for server-side operations (bypass RLS)
+    # Prioritas: service role key (bypass RLS)
     if service_key:
         try:
-            client = create_client(url, service_key)
-            return client
+            supabase = create_client(url, service_key)
+            return supabase
         except Exception as e:
-            st.error(f"Gagal inisialisasi Supabase dengan service key: {e}")
+            st.error(f"❌ Gagal inisialisasi Supabase dengan service key: {e}")
             return None
 
-    # Fallback to anon key (subject to RLS)
+    # Fallback ke anon key
     if anon_key:
         try:
-            client = create_client(url, anon_key)
-            st.warning("Menggunakan anon key Supabase (terikat RLS). Jika insert ditolak, gunakan SUPABASE_SERVICE_KEY di env vars.")
-            return client
+            st.warning("⚠️ Menggunakan anon key (RLS aktif). "
+                       "Gunakan SUPABASE_SERVICE_KEY di environment untuk akses penuh.")
+            supabase = create_client(url, anon_key)
+            return supabase
         except Exception as e:
-            st.error(f"Gagal inisialisasi Supabase dengan anon key: {e}")
+            st.error(f"❌ Gagal inisialisasi Supabase dengan anon key: {e}")
             return None
 
-    st.error("Tidak ada SUPABASE key ditemukan. Set SUPABASE_SERVICE_KEY (disarankan) atau SUPABASE_ANON_KEY.")
+    st.error("❌ Tidak ditemukan SUPABASE key. "
+             "Set SUPABASE_SERVICE_KEY (disarankan) atau SUPABASE_ANON_KEY.")
     return None
-        if not url.startswith("https://"):
-            st.error("⚠️ URL Supabase tidak valid")
-            return None
-        if len(key) < 100:
-            st.error("⚠️ API Key Supabase tidak valid")
-            return None
 
-        supabase: Client = create_client(url, key)
-        supabase.table("bookings").select("id").limit(1).execute()  # quick test
-        return supabase
-    except Exception as err:
-        st.error(f"⚠️ Gagal terhubung ke Supabase: {err}")
-        return None
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 3. VALIDASI INPUT
