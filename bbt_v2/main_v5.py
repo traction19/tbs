@@ -303,7 +303,7 @@ def booking_weekly_page() -> None:
         nama = st.text_input("Nama Pemesan")
         subdir = st.text_input("Sub Direktorat")
         floor = st.selectbox("Lantai", ["19"])
-        ruang_meeting = st.selectbox("Ruang Meeting", ["Breakout Traction","Breakout DigiAds","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"])
+        ruang_meeting = st.selectbox("Ruang Meeting", ruang_options)
         day = st.selectbox("Day", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])
         tanggal_mulai = st.date_input("Tanggal Mulai", value=date.today())
         tanggal_selesai = st.date_input("Tanggal Selesai", value=date.today())
@@ -367,29 +367,31 @@ def booking_weekly_page() -> None:
                     st.error(c)
                 st.stop()
 
-            if errors:
-                for err in errors:
-                    st.error(err)
-                st.stop()
-
+            # insert semua occurrences — pastikan ruang_meeting sesuai (strip)
             try:
-                supabase.table("bookings19").insert(
-                    {
-                        "nama": nama,
-                        "subdir": subdir,
-                        "floor": floor,
-                        "ruang_meeting": ruang_meeting,
-                        "tanggal_booking": str(booking_date),
-                        "waktu_mulai": waktu_mulai.strftime("%H:%M:%S"),
-                        "waktu_selesai": waktu_selesai.strftime("%H:%M:%S"),
-                        "keterangan": keterangan,
-                    }
-                ).execute()
-                st.success("Booking berhasil disimpan!")
+                for d in occurrences:
+                    rm = ruang_meeting.strip() if isinstance(ruang_meeting, str) else ruang_meeting
+                    supabase.table("bookings").insert(
+                        {
+                            "nama": nama,
+                            "subdir": subdir,
+                            "floor": floor,
+                            "ruang_meeting": rm,
+                            "tanggal_booking": str(d),
+                            "waktu_mulai": waktu_mulai.strftime("%H:%M:%S"),
+                            "waktu_selesai": waktu_selesai.strftime("%H:%M:%S"),
+                            "keterangan": keterangan,
+                        }
+                    ).execute()
+                st.success(f"Berhasil membuat {len(occurrences)} jadwal weekly untuk day {day}.")
                 st.session_state.page = "list"
                 st.rerun()
             except Exception as err:
-                st.error(f"Gagal menyimpan booking: {err}")
+                # tampilkan pesan DB error dan hint
+                st.error(f"Gagal menyimpan jadwal weekly: {err}")
+                st.error("Kemungkinan nilai 'Ruang Meeting' tidak sesuai constraint di database. "
+                         "Solusi: gunakan daftar ruang yang muncul di dropdown Ruang Meeting (nilai tersebut berasal dari DB). "
+                         "Jika ingin menambahkan nama ruang baru, tambahkan ke konfigurasi DB (atau ke tabel master rooms) agar constraint terpenuhi.")
 
 def booking_list_page() -> None:
     st.markdown(
