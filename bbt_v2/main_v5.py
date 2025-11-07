@@ -315,7 +315,7 @@ def booking_weekly_page() -> None:
 
     # 2) Fallback: kalau DB kosong / gagal, pakai daftar default (sesuaikan jika perlu)
     if not ruang_options:
-        ruang_options = ["Breakout DigiAds", "Coordination", "Cozy 19.2", "Cozy 19.3", "Cozy 19.4"]
+        ruang_options = ["Breakout Traction","Breakout DigiAds","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"]
 
     with st.form("weekly_booking_form", clear_on_submit=False):
         nama = st.text_input("Nama Pemesan")
@@ -472,7 +472,7 @@ def booking_list_page() -> None:
             st.session_state.room_filter = "Semua Ruang"
 
         # Filter ruang meeting dengan session state
-        ruang_opsi = ["Semua Ruang", "Breakout Traction", "Cozy 19.2"]
+        ruang_opsi = ["Semua Ruang", "Breakout Traction","Breakout DigiAds","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"]
         room_filter = st.selectbox(
             "Filter Ruang Meeting", 
             ruang_opsi,
@@ -549,6 +549,7 @@ def booking_list_page() -> None:
         with colA:
             st.markdown("🔴 **Breakout Traction**")
             st.markdown("🟢 **Cozy 19.2**")
+            
         #with colB:
         #    st.markdown(" Cozy 19.2")
 
