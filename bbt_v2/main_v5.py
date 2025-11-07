@@ -298,7 +298,7 @@ def booking_weekly_page() -> None:
     # 1) Coba ambil daftar ruang meeting dari DB (nilai yang sudah ada di tabel bookings)
     ruang_options = []
     try:
-        resp = supabase.table("bookings").select("ruang_meeting").execute()
+        resp = supabase.table("bookings19").select("ruang_meeting").execute()
         if resp and getattr(resp, 'data', None):
             seen = set()
             for r in resp.data:
@@ -385,7 +385,7 @@ def booking_weekly_page() -> None:
             try:
                 for d in occurrences:
                     rm = ruang_meeting.strip() if isinstance(ruang_meeting, str) else ruang_meeting
-                    supabase.table("bookings").insert(
+                    supabase.table("bookings19").insert(
                         {
                             "nama": nama,
                             "subdir": subdir,
