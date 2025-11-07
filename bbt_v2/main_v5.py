@@ -62,15 +62,43 @@ load_css()
 # 2. INISIALISASI SUPABASE
 # ──────────────────────────────────────────────────────────────────────────────
 @st.cache_resource(show_spinner=False)
-def init_supabase() -> Client | None:
-    """Membuat koneksi Supabase dan melakukan pengecekan."""
-    try:
-        if "supabase" not in st.secrets:
-            st.error("⚠️ Konfigurasi Supabase tidak ditemukan dalam secrets")
-            return None
-        url: str = st.secrets["supabase"]["url"]
-        key: str = st.secrets["supabase"]["key"]
 
+def init_supabase() -> Client | None:
+    """
+    Initialize Supabase client.
+    Use SUPABASE_SERVICE_KEY (service_role) if available in env vars (recommended for server-side).
+    Otherwise fallback to SUPABASE_ANON_KEY if present.
+    """
+    import os
+    url = os.environ.get("SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL") or os.environ.get("REACT_APP_SUPABASE_URL")
+    service_key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    anon_key = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_KEY") or os.environ.get("SUPABASE_ANON")
+
+    if not url:
+        st.error("SUPABASE_URL tidak ditemukan di environment variables. Silakan set SUPABASE_URL.")
+        return None
+
+    # Prefer service role key for server-side operations (bypass RLS)
+    if service_key:
+        try:
+            client = create_client(url, service_key)
+            return client
+        except Exception as e:
+            st.error(f"Gagal inisialisasi Supabase dengan service key: {e}")
+            return None
+
+    # Fallback to anon key (subject to RLS)
+    if anon_key:
+        try:
+            client = create_client(url, anon_key)
+            st.warning("Menggunakan anon key Supabase (terikat RLS). Jika insert ditolak, gunakan SUPABASE_SERVICE_KEY di env vars.")
+            return client
+        except Exception as e:
+            st.error(f"Gagal inisialisasi Supabase dengan anon key: {e}")
+            return None
+
+    st.error("Tidak ada SUPABASE key ditemukan. Set SUPABASE_SERVICE_KEY (disarankan) atau SUPABASE_ANON_KEY.")
+    return None
         if not url.startswith("https://"):
             st.error("⚠️ URL Supabase tidak valid")
             return None
@@ -79,7 +107,7 @@ def init_supabase() -> Client | None:
             return None
 
         supabase: Client = create_client(url, key)
-        supabase.table("bookings19").select("id").limit(1).execute()  # quick test
+        supabase.table("bookings").select("id").limit(1).execute()  # quick test
         return supabase
     except Exception as err:
         st.error(f"⚠️ Gagal terhubung ke Supabase: {err}")
@@ -111,7 +139,7 @@ def validate_booking_conflict(
     """Cek bentrok jadwal di database."""
     try:
         query = (
-            supabase.table("bookings19")
+            supabase.table("bookings")
             .select("*")
             .eq("tanggal_booking", str(booking_date))
             .eq("ruang_meeting", room)
@@ -255,7 +283,7 @@ def booking_form_page() -> None:
             st.stop()
 
         try:
-            supabase.table("bookings19").insert(
+            supabase.table("bookings").insert(
                 {
                     "nama": nama,
                     "subdir": subdir,
@@ -272,6 +300,11 @@ def booking_form_page() -> None:
             st.rerun()
         except Exception as err:
             st.error(f"Gagal menyimpan booking: {err}")
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 6. HALAMAN LIST BOOKING – CALENDAR VIEW
+# ──────────────────────────────────────────────────────────────────────────────
+from streamlit_calendar import calendar  # import setelah yakin ter-install
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -294,8 +327,23 @@ def booking_weekly_page() -> None:
     if not supabase:
         st.stop()
 
-    # Available rooms - reuse same list as main form (ensure consistency)
-    ruang_options = ["Breakout Traction", "Breakout DigiAds", "Dedication 1", "Dedication 2", "Dedication 3", "Dedication 5", "Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"]
+    # 1) Coba ambil daftar ruang meeting dari DB (nilai yang sudah ada di tabel bookings)
+    ruang_options = []
+    try:
+        resp = supabase.table("bookings").select("ruang_meeting").execute()
+        if resp and getattr(resp, 'data', None):
+            seen = set()
+            for r in resp.data:
+                val = r.get("ruang_meeting")
+                if val and val not in seen:
+                    seen.add(val)
+                    ruang_options.append(val)
+    except Exception:
+        ruang_options = []
+
+    # 2) Fallback: kalau DB kosong / gagal, pakai daftar default (sesuaikan jika perlu)
+    if not ruang_options:
+        ruang_options = ["Breakout DigiAds", "Coordination", "Cozy 19.2", "Cozy 19.3", "Cozy 19.4"]
 
     with st.form("weekly_booking_form", clear_on_submit=False):
         nama = st.text_input("Nama Pemesan")
@@ -314,7 +362,7 @@ def booking_weekly_page() -> None:
 
         submitted = st.form_submit_button("Simpan Jadwal Weekly")
         if submitted:
-            # Basic validations (reuse existing validators where helpful)
+            # Validasi dasar
             errors = []
             valid, msg = validate_name(nama)
             if not valid:
@@ -336,11 +384,10 @@ def booking_weekly_page() -> None:
                     st.error(err)
                 st.stop()
 
-            # Map day name to weekday index
-            day_map = {"Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4}
+            day_map = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4 }
             target_weekday = day_map[day]
 
-            # Generate list of dates between start and end that match the selected weekday
+            # buat list tanggal yang cocok dengan day antara start..end
             occurrences = []
             cur = tanggal_mulai
             from datetime import timedelta
@@ -353,7 +400,7 @@ def booking_weekly_page() -> None:
                 st.error("Tidak ada tanggal yang cocok dengan pilihan Day dalam rentang tanggal.")
                 st.stop()
 
-            # Conflict check for all occurrences
+            # cek konflik untuk masing-masing tanggal
             conflicts = []
             for d in occurrences:
                 valid_ok, msg = validate_booking_conflict(supabase, d, waktu_mulai, waktu_selesai, ruang_meeting)
@@ -366,15 +413,16 @@ def booking_weekly_page() -> None:
                     st.error(c)
                 st.stop()
 
-            # Insert all occurrences into supabase
+            # insert semua occurrences — pastikan ruang_meeting sesuai (strip)
             try:
                 for d in occurrences:
-                    supabase.table("bookings19").insert(
+                    rm = ruang_meeting.strip() if isinstance(ruang_meeting, str) else ruang_meeting
+                    supabase.table("bookings").insert(
                         {
                             "nama": nama,
                             "subdir": subdir,
                             "floor": floor,
-                            "ruang_meeting": ruang_meeting,
+                            "ruang_meeting": rm,
                             "tanggal_booking": str(d),
                             "waktu_mulai": waktu_mulai.strftime("%H:%M:%S"),
                             "waktu_selesai": waktu_selesai.strftime("%H:%M:%S"),
@@ -385,13 +433,11 @@ def booking_weekly_page() -> None:
                 st.session_state.page = "list"
                 st.rerun()
             except Exception as err:
+                # tampilkan pesan DB error dan hint
                 st.error(f"Gagal menyimpan jadwal weekly: {err}")
-
-# ──────────────────────────────────────────────────────────────────────────────
-# 6. HALAMAN LIST BOOKING – CALENDAR VIEW
-# ──────────────────────────────────────────────────────────────────────────────
-from streamlit_calendar import calendar  # import setelah yakin ter-install
-
+                st.error("Kemungkinan nilai 'Ruang Meeting' tidak sesuai constraint di database. "
+                         "Solusi: gunakan daftar ruang yang muncul di dropdown Ruang Meeting (nilai tersebut berasal dari DB). "
+                         "Jika ingin menambahkan nama ruang baru, tambahkan ke konfigurasi DB (atau ke tabel master rooms) agar constraint terpenuhi.")
 def booking_list_page() -> None:
     st.markdown(
         '<div class="main-header"><h1>📅 Kalender Booking Meeting Room</h1></div>',
@@ -413,7 +459,7 @@ def booking_list_page() -> None:
 
     try:
         result = (
-            supabase.table("bookings19")
+            supabase.table("bookings")
             .select("*")
             .order("tanggal_booking", desc=False)
             .execute()
@@ -568,7 +614,7 @@ def admin_page() -> None:
 
     try:
         df = pd.DataFrame(
-            supabase.table("bookings19").select("*").execute().data
+            supabase.table("bookings").select("*").execute().data
         )
         if df.empty:
             st.info("Belum ada data booking")
@@ -597,7 +643,7 @@ def admin_page() -> None:
             format="%d",
         )
         if st.button("🗑️ Hapus Booking"):
-            supabase.table("bookings19").delete().eq("id", del_id).execute()
+            supabase.table("bookings").delete().eq("id", del_id).execute()
             st.success("Booking dihapus")
             st.rerun()
     except Exception as err:
