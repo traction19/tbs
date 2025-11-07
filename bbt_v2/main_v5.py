@@ -31,32 +31,86 @@ st.set_page_config(
 )
 
 def load_css() -> None:
-    """Memuat custom CSS bergaya minimalis Apple-like."""
+    """Memuat custom CSS bergaya minimalis Apple-like dengan font Poppins & Inter."""
     st.markdown(
         """
         <style>
-        /* Reset & base */
-        .stApp     {background-color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+        /* Import Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap');
 
-        /* Header */
-        .main-header{
-            background:linear-gradient(135deg,#f8f8f8 0%,#e8e8e8 50%,#d8d8d8 100%);
-            border:1px solid #e0e0e0;border-radius:14px;margin-bottom:1.5rem;
-            text-align:center;color:#333;box-shadow:0 1px 3px rgba(0,0,0,.05);}
-        .main-header h1{font-size:1.6rem !important;font-weight:500;margin:0;}
+        /* Reset & base */
+        .stApp {
+            background-color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #333;
+        }
+
+        /* Header utama */
+        .main-header {
+            background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 50%, #d8d8d8 100%);
+            border: 1px solid #e0e0e0;
+            border-radius: 14px;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            color: #222;
+            box-shadow: 0 1px 3px rgba(0,0,0,.05);
+            padding: 1rem 0.5rem;
+        }
+
+        .main-header h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.8rem !important;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: 0.3px;
+            background: linear-gradient(90deg, #4DA3FF, #4ECDC4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
         /* Calendar overrides */
-        .fc-event         {border-radius:5px;padding:2px 5px;font-size:12px;}
-        .fc-event-title   {font-weight:600;}
-        .fc-daygrid-event {margin:1px 0;}
-        .fc-toolbar-title {font-size:1.4rem;font-weight:700;color:#333;}
-        .fc-button        {background:#4ECDC4;border-color:#4ECDC4;}
-        .fc-button:hover  {background:#45B7AA;border-color:#45B7AA;}
-        .fc-today         {background:#FFF3CD !important;}
+        .fc-event {
+            border-radius: 5px;
+            padding: 2px 5px;
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .fc-event-title {
+            font-weight: 600;
+        }
+
+        .fc-daygrid-event {
+            margin: 1px 0;
+        }
+
+        .fc-toolbar-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .fc-button {
+            background: #4ECDC4;
+            border-color: #4ECDC4;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        .fc-button:hover {
+            background: #45B7AA;
+            border-color: #45B7AA;
+        }
+
+        .fc-today {
+            background: #FFF3CD !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,
     )
+
 
 load_css()
 
