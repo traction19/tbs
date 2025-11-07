@@ -553,8 +553,9 @@ def booking_list_page() -> None:
         st.subheader("📌 Keterangan Warna")
         colA, colB = st.columns(2)
         with colA:
-            st.markdown("🔴 **Breakout Traction**")
-            st.markdown("🟢 **Cozy 19.2**")
+            st.markdown("🔴 **Breakout Traction, Breakout DigiAds, Coordination**")
+            st.markdown("🟢 **Cozy 19.2, Cozy 19.3, Cozy 19.4**")
+            st.markdown("🔵 **Dedication 1,2,3,5,6**")
             
         #with colB:
         #    st.markdown(" Cozy 19.2")
