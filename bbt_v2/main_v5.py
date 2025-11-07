@@ -299,29 +299,11 @@ def booking_weekly_page() -> None:
     if not supabase:
         st.stop()
 
-    # 1) Coba ambil daftar ruang meeting dari DB (nilai yang sudah ada di tabel bookings19)
-    ruang_options = []
-    try:
-        resp = supabase.table("bookings19").select("ruang_meeting").execute()
-        if resp and getattr(resp, 'data', None):
-            seen = set()
-            for r in resp.data:
-                val = r.get("ruang_meeting")
-                if val and val not in seen:
-                    seen.add(val)
-                    ruang_options.append(val)
-    except Exception:
-        ruang_options = []
-
-    # 2) Fallback: kalau DB kosong / gagal, pakai daftar default (sesuaikan jika perlu)
-    if not ruang_options:
-        ruang_options = ["Breakout Traction","Breakout DigiAds","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"]
-
     with st.form("weekly_booking_form", clear_on_submit=False):
         nama = st.text_input("Nama Pemesan")
         subdir = st.text_input("Sub Direktorat")
         floor = st.selectbox("Lantai", ["19"])
-        ruang_meeting = st.selectbox("Ruang Meeting", ruang_options)
+        ruang_meeting = st.selectbox("Ruang Meeting", ["Breakout Traction","Breakout DigiAds","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"])
         day = st.selectbox("Day", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])
         tanggal_mulai = st.date_input("Tanggal Mulai", value=date.today())
         tanggal_selesai = st.date_input("Tanggal Selesai", value=date.today())
