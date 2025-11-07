@@ -274,12 +274,6 @@ def booking_form_page() -> None:
             st.error(f"Gagal menyimpan booking: {err}")
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 6. HALAMAN LIST BOOKING – CALENDAR VIEW
-# ──────────────────────────────────────────────────────────────────────────────
-from streamlit_calendar import calendar  # import setelah yakin ter-install
-
-
-# ──────────────────────────────────────────────────────────────────────────────
 # 5b. HALAMAN JADWAL MEETING WEEKLY (RECURRING)
 # ──────────────────────────────────────────────────────────────────────────────
 def booking_weekly_page() -> None:
@@ -298,6 +292,24 @@ def booking_weekly_page() -> None:
     supabase = init_supabase()
     if not supabase:
         st.stop()
+
+    # 1) Coba ambil daftar ruang meeting dari DB (nilai yang sudah ada di tabel bookings)
+    ruang_options = []
+    try:
+        resp = supabase.table("bookings").select("ruang_meeting").execute()
+        if resp and getattr(resp, 'data', None):
+            seen = set()
+            for r in resp.data:
+                val = r.get("ruang_meeting")
+                if val and val not in seen:
+                    seen.add(val)
+                    ruang_options.append(val)
+    except Exception:
+        ruang_options = []
+
+    # 2) Fallback: kalau DB kosong / gagal, pakai daftar default (sesuaikan jika perlu)
+    if not ruang_options:
+        ruang_options = ["Breakout DigiAds", "Coordination", "Cozy 19.2", "Cozy 19.3", "Cozy 19.4"]
 
     with st.form("weekly_booking_form", clear_on_submit=False):
         nama = st.text_input("Nama Pemesan")
