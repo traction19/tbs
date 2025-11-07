@@ -318,8 +318,8 @@ def booking_weekly_page() -> None:
         subdir = st.text_input("Sub Direktorat")
         floor = st.selectbox("Lantai", ["19"])
         ruang_meeting = st.selectbox("Ruang Meeting", ["Breakout Traction","Breakout DigiAds","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"])
-        day = st.selectbox("Day (Pastikan Hari mulai sesuai dengan Tanggal)", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])
-        tanggal_mulai = st.date_input("Tanggal Mulai (Pastikan Tanggal sesuai dengan Hari)", value=date.today())
+        day = st.selectbox("Day (Pastikan Day sesuai dengan Tanggal Mulai)", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])
+        tanggal_mulai = st.date_input("Tanggal Mulai (Pastikan Tanggal Mulai sesuai dengan Day)", value=date.today())
         tanggal_selesai = st.date_input("Tanggal Selesai", value=date.today())
         col_a, col_b = st.columns(2)
         with col_a:
