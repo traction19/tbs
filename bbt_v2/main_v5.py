@@ -79,7 +79,7 @@ def init_supabase() -> Client | None:
             return None
 
         supabase: Client = create_client(url, key)
-        supabase.table("bookings").select("id").limit(1).execute()  # quick test
+        supabase.table("bookings19").select("id").limit(1).execute()  # quick test
         return supabase
     except Exception as err:
         st.error(f"⚠️ Gagal terhubung ke Supabase: {err}")
@@ -111,7 +111,7 @@ def validate_booking_conflict(
     """Cek bentrok jadwal di database."""
     try:
         query = (
-            supabase.table("bookings")
+            supabase.table("bookings19")
             .select("*")
             .eq("tanggal_booking", str(booking_date))
             .eq("ruang_meeting", room)
@@ -255,7 +255,7 @@ def booking_form_page() -> None:
             st.stop()
 
         try:
-            supabase.table("bookings").insert(
+            supabase.table("bookings19").insert(
                 {
                     "nama": nama,
                     "subdir": subdir,
@@ -299,10 +299,10 @@ def booking_weekly_page() -> None:
     if not supabase:
         st.stop()
 
-    # 1) Coba ambil daftar ruang meeting dari DB (nilai yang sudah ada di tabel bookings)
+    # 1) Coba ambil daftar ruang meeting dari DB (nilai yang sudah ada di tabel bookings19)
     ruang_options = []
     try:
-        resp = supabase.table("bookings").select("ruang_meeting").execute()
+        resp = supabase.table("bookings19").select("ruang_meeting").execute()
         if resp and getattr(resp, 'data', None):
             seen = set()
             for r in resp.data:
@@ -389,7 +389,7 @@ def booking_weekly_page() -> None:
             try:
                 for d in occurrences:
                     rm = ruang_meeting.strip() if isinstance(ruang_meeting, str) else ruang_meeting
-                    supabase.table("bookings").insert(
+                    supabase.table("bookings19").insert(
                         {
                             "nama": nama,
                             "subdir": subdir,
@@ -431,7 +431,7 @@ def booking_list_page() -> None:
 
     try:
         result = (
-            supabase.table("bookings")
+            supabase.table("bookings19")
             .select("*")
             .order("tanggal_booking", desc=False)
             .execute()
@@ -586,7 +586,7 @@ def admin_page() -> None:
 
     try:
         df = pd.DataFrame(
-            supabase.table("bookings").select("*").execute().data
+            supabase.table("bookings19").select("*").execute().data
         )
         if df.empty:
             st.info("Belum ada data booking")
@@ -615,7 +615,7 @@ def admin_page() -> None:
             format="%d",
         )
         if st.button("🗑️ Hapus Booking"):
-            supabase.table("bookings").delete().eq("id", del_id).execute()
+            supabase.table("bookings19").delete().eq("id", del_id).execute()
             st.success("Booking dihapus")
             st.rerun()
     except Exception as err:
