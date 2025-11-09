@@ -24,7 +24,7 @@ from streamlit_calendar import calendar
 # 1. KONFIGURASI HALAMAN & CSS
 # ──────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Booking Meeting Room Warga PnT TSO 19th Floor",
+    page_title="Online Booking Meeting Room Warga PnT TSO 19th Floor",
     page_icon="🏢",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -233,7 +233,7 @@ def admin_login_page() -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 def booking_form_page() -> None:
     st.markdown(
-        '<div class="main-header"><h1>📝 Booking Meeting Room Warga PnT TSO 19th Floor</h1></div>',
+        '<div class="main-header"><h1>Online Booking Meeting Room Warga PnT TSO 19th Floor</h1></div>',
         unsafe_allow_html=True,
     )
 
