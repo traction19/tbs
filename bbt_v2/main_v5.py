@@ -463,7 +463,7 @@ def booking_weekly_page() -> None:
 
 def booking_list_page() -> None:
     st.markdown(
-        '<div class="main-header"><h1>📅 Booking Meeting Room Warga PnT TSO 19th Floor</h1></div>',
+        '<div class="main-header"><h1>Online Booking Meeting Room Warga PnT TSO 19th Floor</h1></div>',
         unsafe_allow_html=True,
     )
 
