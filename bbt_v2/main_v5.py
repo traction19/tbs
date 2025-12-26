@@ -495,13 +495,15 @@ def booking_list_page() -> None:
         df = pd.DataFrame(result.data)
         
         # Tentukan tanggal paling awal dari seluruh booking
-        min_date = pd.to_datetime(df["tanggal_booking"]).min().date()
+        # min_date = pd.to_datetime(df["tanggal_booking"]).min().date()
 
         # ── Konversi ke event kalender ──────────────────────────────────────
         events = []
         for _, row in df.iterrows():
-            start_dt = f"{row['tanggal_booking']}T{row['waktu_mulai']}"
-            end_dt = f"{row['tanggal_booking']}T{row['waktu_selesai']}"
+            #start_dt = f"{row['tanggal_booking']}T{row['waktu_mulai']}"
+            #end_dt = f"{row['tanggal_booking']}T{row['waktu_selesai']}"
+            start_dt = row["tanggal_booking"]  # YYYY-MM-DD
+            end_dt = row["tanggal_booking"]
             ruang = row["ruang_meeting"].strip()  # antisipasi spasi tak sengaja
             if ruang in ["Breakout Traction", "Breakout Dastech", "Coordination"]:
                 color = "#FF6B6B"  # merah
@@ -518,6 +520,7 @@ def booking_list_page() -> None:
                     "title": f"{row['nama']} - {row['ruang_meeting']}",
                     "start": start_dt,
                     "end": end_dt,
+                    "allDay": True,
                     "color": color,
                     "extendedProps": {
                         "nama": row["nama"],
@@ -561,8 +564,7 @@ def booking_list_page() -> None:
         cal_options = {
             "editable": False,
             "selectable": True,
-            "initialDate": str(min_date),
-            "timeZone": "local",
+            #"initialDate": str(min_date),
             "headerToolbar": {
                 "left": "prev,next today",
                 "center": "title",
