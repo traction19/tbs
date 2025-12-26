@@ -493,14 +493,12 @@ def booking_list_page() -> None:
             return
 
         df = pd.DataFrame(result.data)
-        booking_date = pd.to_datetime(row["tanggal_booking"]).date()
+
         # ── Konversi ke event kalender ──────────────────────────────────────
         events = []
         for _, row in df.iterrows():
-            #start_dt = f"{row['tanggal_booking']}T{row['waktu_mulai']}"
-            #end_dt = f"{row['tanggal_booking']}T{row['waktu_selesai']}"
-            start_dt = booking_date.isoformat()
-            end_dt = (booking_date + timedelta(days=1)).isoformat()
+            start_dt = f"{row['tanggal_booking']}T{row['waktu_mulai']}"
+            end_dt = f"{row['tanggal_booking']}T{row['waktu_selesai']}"
             ruang = row["ruang_meeting"].strip()  # antisipasi spasi tak sengaja
             if ruang in ["Breakout Traction", "Breakout Dastech", "Coordination"]:
                 color = "#FF6B6B"  # merah
