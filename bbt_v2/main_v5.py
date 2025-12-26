@@ -493,7 +493,7 @@ def booking_list_page() -> None:
             return
 
         df = pd.DataFrame(result.data)
-        
+        booking_date = pd.to_datetime(row["tanggal_booking"]).date()
         # ── Konversi ke event kalender ──────────────────────────────────────
         events = []
         for _, row in df.iterrows():
