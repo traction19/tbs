@@ -562,6 +562,7 @@ def booking_list_page() -> None:
             "editable": False,
             "selectable": True,
             "initialDate": str(min_date),
+            "timeZone": "local",
             "headerToolbar": {
                 "left": "prev,next today",
                 "center": "title",
