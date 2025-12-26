@@ -10,7 +10,7 @@ admin panel, dan validasi lengkap.
 
 import streamlit as st
 import pandas as pd
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 import re
 from supabase import create_client, Client
 import bcrypt
@@ -494,16 +494,13 @@ def booking_list_page() -> None:
 
         df = pd.DataFrame(result.data)
         
-        # Tentukan tanggal paling awal dari seluruh booking
-        # min_date = pd.to_datetime(df["tanggal_booking"]).min().date()
-
         # ── Konversi ke event kalender ──────────────────────────────────────
         events = []
         for _, row in df.iterrows():
             #start_dt = f"{row['tanggal_booking']}T{row['waktu_mulai']}"
             #end_dt = f"{row['tanggal_booking']}T{row['waktu_selesai']}"
-            start_dt = row["tanggal_booking"]  # YYYY-MM-DD
-            end_dt = row["tanggal_booking"]
+            start_dt = booking_date.isoformat()
+            end_dt = (booking_date + timedelta(days=1)).isoformat()
             ruang = row["ruang_meeting"].strip()  # antisipasi spasi tak sengaja
             if ruang in ["Breakout Traction", "Breakout Dastech", "Coordination"]:
                 color = "#FF6B6B"  # merah
@@ -564,7 +561,6 @@ def booking_list_page() -> None:
         cal_options = {
             "editable": False,
             "selectable": True,
-            #"initialDate": str(min_date),
             "headerToolbar": {
                 "left": "prev,next today",
                 "center": "title",
