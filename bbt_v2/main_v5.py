@@ -176,6 +176,8 @@ def validate_booking_conflict(
             query = query.neq("id", booking_id)
 
         result = query.execute()
+        if not result.data:  # Tambah cek ini
+            return True, ""
         for booking in result.data:
             existing_start = datetime.strptime(booking["waktu_mulai"], "%H:%M:%S").time()
             existing_end = datetime.strptime(booking["waktu_selesai"], "%H:%M:%S").time()
@@ -460,6 +462,25 @@ def booking_weekly_page() -> None:
                 st.error("Kemungkinan nilai 'Ruang Meeting' tidak sesuai constraint di database. "
                          "Solusi: gunakan daftar ruang yang muncul di dropdown Ruang Meeting (nilai tersebut berasal dari DB). "
                          "Jika ingin menambahkan nama ruang baru, tambahkan ke konfigurasi DB (atau ke tabel master rooms) agar constraint terpenuhi.")
+
+
+# ✅ BARU - Fungsi fetch_all_bookings()
+def fetch_all_bookings(supabase: Client) -> pd.DataFrame:
+    """Mengambil semua data booking dari Supabase dengan error handling."""
+    try:
+        result = supabase.table("bookings19").select("*").execute()
+        if result.data:
+            df = pd.DataFrame(result.data)
+            if 'tanggal_booking' in df.columns:
+                df['tanggal_booking'] = pd.to_datetime(df['tanggal_booking'])
+            return df.sort_values('tanggal_booking', ascending=False)
+        else:
+            st.info("📋 Belum ada data booking")
+            return pd.DataFrame()
+    except Exception as e:
+        st.error(f"❌ Error mengambil data: {str(e)}")
+        return pd.DataFrame()
+
 
 def booking_list_page() -> None:
     st.markdown(
