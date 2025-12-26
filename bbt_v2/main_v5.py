@@ -515,7 +515,6 @@ def booking_list_page() -> None:
                     "title": f"{row['nama']} - {row['ruang_meeting']}",
                     "start": start_dt,
                     "end": end_dt,
-                    "allDay": True,
                     "color": color,
                     "extendedProps": {
                         "nama": row["nama"],
