@@ -493,6 +493,9 @@ def booking_list_page() -> None:
             return
 
         df = pd.DataFrame(result.data)
+        
+        # Tentukan tanggal paling awal dari seluruh booking
+        min_date = pd.to_datetime(df["tanggal_booking"]).min().date()
 
         # ── Konversi ke event kalender ──────────────────────────────────────
         events = []
@@ -558,6 +561,7 @@ def booking_list_page() -> None:
         cal_options = {
             "editable": False,
             "selectable": True,
+            "initialDate": str(min_date),
             "headerToolbar": {
                 "left": "prev,next today",
                 "center": "title",
