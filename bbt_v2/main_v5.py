@@ -19,6 +19,12 @@ import os
 import uuid
 from streamlit_calendar import calendar
 
+# ─────────────────────────────────────────────────────────────
+# GLOBAL BOOKING CONFIG
+# ─────────────────────────────────────────────────────────────
+MAX_BOOKING_YEAR = 2026
+#BOOKING_START_DATE = date(2026, 1, 1)
+BOOKING_END_DATE = date(2026, 12, 31)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 1. KONFIGURASI HALAMAN & CSS
@@ -252,14 +258,20 @@ def booking_form_page() -> None:
     supabase = init_supabase()
     if not supabase:
         st.stop()
-
+           
     # Form input
     with st.form("booking_form", clear_on_submit=False):
         nama = st.text_input("Nama Pemesan")
         subdir = st.text_input("Sub Direktorat")
         floor = st.selectbox("Lantai", ["19"])
         ruang_meeting = st.selectbox("Ruang Meeting", ["Breakout Traction","Breakout Dastech","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"])
-        booking_date = st.date_input("Tanggal Booking", value=date.today())
+        #booking_date = st.date_input("Tanggal Booking", value=date.today())
+        booking_date = st.date_input(
+            "Tanggal Booking",
+            value=date.today(),
+            min_value=date.today(),
+            max_value=BOOKING_END_DATE,
+        )
         col1, col2 = st.columns(2)
         with col1:
             waktu_mulai = st.time_input("Waktu Mulai", value=time(9, 0))
@@ -274,6 +286,11 @@ def booking_form_page() -> None:
 
     if submit:
         errors = []
+
+        # ⛔ Batasi booking hanya untuk tahun 2026
+        if booking_date.year != 2026:
+            st.error("Buru2 amat cyin 2027, kita Book Only di 2026 dulu yach")
+            st.stop()
 
         valid, msg = validate_name(nama)
         if not valid:
@@ -402,6 +419,10 @@ def booking_weekly_page() -> None:
                 errors.append("Keterangan Meeting minimal 10 karakter")
             if tanggal_selesai < tanggal_mulai:
                 errors.append("Tanggal Selesai harus setelah atau sama dengan Tanggal Mulai")
+
+            # ⛔ Batasi booking weekly hanya tahun 2026
+            if tanggal_mulai.year != 2026 or tanggal_selesai.year != 2026:
+                errors.append("Jangan buru2 ya cyin, kita fokus di 2026 dulu yach")
 
             if errors:
                 for err in errors:
