@@ -117,7 +117,7 @@ load_css()
 # ──────────────────────────────────────────────────────────────────────────────
 # 2. INISIALISASI SUPABASE
 # ──────────────────────────────────────────────────────────────────────────────
-@st.cache_resource(show_spinner=False)
+#@st.cache_resource(show_spinner=False)
 def init_supabase() -> Client | None:
     """Membuat koneksi Supabase dan melakukan pengecekan."""
     try:
