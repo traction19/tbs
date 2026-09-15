@@ -11,6 +11,7 @@ admin panel, dan validasi lengkap.
 import streamlit as st
 import pandas as pd
 from datetime import datetime, date, time, timedelta
+import calendar as calendar_module
 import re
 from supabase import create_client, Client
 import bcrypt
@@ -22,9 +23,33 @@ from streamlit_calendar import calendar
 # ─────────────────────────────────────────────────────────────
 # GLOBAL BOOKING CONFIG
 # ─────────────────────────────────────────────────────────────
-MAX_BOOKING_YEAR = 2026
 #BOOKING_START_DATE = date(2026, 1, 1)
-BOOKING_END_DATE = date(2026, 12, 31)
+
+
+def add_months(source_date: date, months: int) -> date:
+    month_index = source_date.month - 1 + months
+    year = source_date.year + month_index // 12
+    month = month_index % 12 + 1
+    day = min(source_date.day, calendar_module.monthrange(year, month)[1])
+    return date(year, month, day)
+
+
+BOOKING_START_DATE = date.today()
+BOOKING_END_DATE = add_months(BOOKING_START_DATE, 6)
+MEETING_ROOMS = (
+    "Breakout Traction",
+    "Breakout Dastech",
+    "Dedication 1",
+    "Dedication 2",
+    "Dedication 3",
+    "Dedication 5",
+    "Dedication 6",
+    "Coordination",
+    "Cozy 19.2",
+    "Cozy 19.3",
+    "Cozy 19.4",
+    "Sangkar Burung",
+)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 1. KONFIGURASI HALAMAN & CSS
@@ -264,7 +289,7 @@ def booking_form_page() -> None:
         nama = st.text_input("Nama Pemesan")
         subdir = st.text_input("Sub Direktorat")
         floor = st.selectbox("Lantai", ["19"])
-        ruang_meeting = st.selectbox("Ruang Meeting", ["Breakout Traction","Breakout Dastech","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"])
+        ruang_meeting = st.selectbox("Ruang Meeting", MEETING_ROOMS)
         #booking_date = st.date_input("Tanggal Booking", value=date.today())
         booking_date = st.date_input(
             "Tanggal Booking",
@@ -288,8 +313,8 @@ def booking_form_page() -> None:
         errors = []
 
         # ⛔ Batasi booking hanya untuk tahun 2026
-        if booking_date.year != 2026:
-            st.error("Buru2 amat cyin 2027, kita Book Only di 2026 dulu yach")
+        if not BOOKING_START_DATE <= booking_date <= BOOKING_END_DATE:
+            st.error("Tanggal booking hanya dapat dipilih sampai 6 bulan dari hari ini")
             st.stop()
 
         valid, msg = validate_name(nama)
@@ -368,32 +393,24 @@ def booking_weekly_page() -> None:
     if not supabase:
         st.stop()
 
-    # 1) Coba ambil daftar ruang meeting dari DB (nilai yang sudah ada di tabel bookings)
-    ruang_options = []
-    try:
-        resp = supabase.table("bookings19").select("ruang_meeting").execute()
-        if resp and getattr(resp, 'data', None):
-            seen = set()
-            for r in resp.data:
-                val = r.get("ruang_meeting")
-                if val and val not in seen:
-                    seen.add(val)
-                    ruang_options.append(val)
-    except Exception:
-        ruang_options = []
-
-    # 2) Fallback: kalau DB kosong / gagal, pakai daftar default (sesuaikan jika perlu)
-    if not ruang_options:
-        ruang_options = ["Breakout Traction","Breakout Dastech","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"]
-
     with st.form("weekly_booking_form", clear_on_submit=False):
         nama = st.text_input("Nama Pemesan")
         subdir = st.text_input("Sub Direktorat")
         floor = st.selectbox("Lantai", ["19"])
-        ruang_meeting = st.selectbox("Ruang Meeting", ["Breakout Traction","Breakout Dastech","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"])
+        ruang_meeting = st.selectbox("Ruang Meeting", MEETING_ROOMS)
         day = st.selectbox("Day (Pastikan Day sesuai dengan Tanggal Mulai)", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])
-        tanggal_mulai = st.date_input("Tanggal Mulai (Pastikan Tanggal Mulai sesuai dengan Day)", value=date.today())
-        tanggal_selesai = st.date_input("Tanggal Selesai", value=date.today())
+        tanggal_mulai = st.date_input(
+            "Tanggal Mulai (Pastikan Tanggal Mulai sesuai dengan Day)",
+            value=date.today(),
+            min_value=BOOKING_START_DATE,
+            max_value=BOOKING_END_DATE,
+        )
+        tanggal_selesai = st.date_input(
+            "Tanggal Selesai",
+            value=date.today(),
+            min_value=BOOKING_START_DATE,
+            max_value=BOOKING_END_DATE,
+        )
         col_a, col_b = st.columns(2)
         with col_a:
             waktu_mulai = st.time_input("Waktu Mulai", value=time(9, 0))
@@ -419,10 +436,11 @@ def booking_weekly_page() -> None:
                 errors.append("Keterangan Meeting minimal 10 karakter")
             if tanggal_selesai < tanggal_mulai:
                 errors.append("Tanggal Selesai harus setelah atau sama dengan Tanggal Mulai")
-
-            # ⛔ Batasi booking weekly hanya tahun 2026
-            if tanggal_mulai.year != 2026 or tanggal_selesai.year != 2026:
-                errors.append("Jangan buru2 ya cyin, kita fokus di 2026 dulu yach")
+            if (
+                tanggal_mulai < BOOKING_START_DATE
+                or tanggal_selesai > BOOKING_END_DATE
+            ):
+                errors.append("Tanggal booking hanya dapat dipilih sampai 6 bulan dari hari ini")
 
             if errors:
                 for err in errors:
@@ -542,7 +560,7 @@ def booking_list_page() -> None:
             start_dt = f"{row['tanggal_booking']}T{row['waktu_mulai']}"
             end_dt = f"{row['tanggal_booking']}T{row['waktu_selesai']}"
             ruang = row["ruang_meeting"].strip()  # antisipasi spasi tak sengaja
-            if ruang in ["Breakout Traction", "Breakout Dastech", "Coordination"]:
+            if ruang in ["Breakout Traction", "Breakout Dastech", "Coordination", "Sangkar Burung"]:
                 color = "#FF6B6B"  # merah
             elif ruang in ["Cozy 19.2", "Cozy 19.3", "Cozy 19.4"]:
                 color = "#4ECDC4"  # hijau toska
@@ -574,7 +592,7 @@ def booking_list_page() -> None:
             st.session_state.room_filter = "Semua Ruang"
 
         # Filter ruang meeting dengan session state
-        ruang_opsi = ["Semua Ruang", "Breakout Traction","Breakout Dastech","Dedication 1","Dedication 2","Dedication 3","Dedication 5","Dedication 6","Coordination","Cozy 19.2","Cozy 19.3","Cozy 19.4"]
+        ruang_opsi = ("Semua Ruang", *MEETING_ROOMS)
         room_filter = st.selectbox(
             "Filter Ruang Meeting", 
             ruang_opsi,
@@ -649,7 +667,7 @@ def booking_list_page() -> None:
         st.subheader("📌 Keterangan Warna")
         colA, colB = st.columns(2)
         with colA:
-            st.markdown("🔴 **Breakout Traction, Breakout Dastech, Coordination**")
+            st.markdown("🔴 **Breakout Traction, Breakout Dastech, Coordination, Sangkar Burung**")
             st.markdown("🟢 **Cozy 19.2, Cozy 19.3, Cozy 19.4**")
             st.markdown("🔵 **Dedication 1,2,3,5,6**")
             
