@@ -1,0 +1,5 @@
+.venv
+.venv-py39-backup
+.devcontainer
+bbt_v2/__pycache__
+bbt_v2/.streamlit/secrets.toml
