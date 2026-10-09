@@ -393,24 +393,42 @@ def booking_weekly_page() -> None:
     if not supabase:
         st.stop()
 
+    tanggal_mulai = st.date_input(
+        "Tanggal Mulai",
+        value=date.today(),
+        min_value=BOOKING_START_DATE,
+        max_value=BOOKING_END_DATE,
+    )
+    tanggal_selesai = st.date_input(
+        "Tanggal Selesai",
+        value=date.today(),
+        min_value=BOOKING_START_DATE,
+        max_value=BOOKING_END_DATE,
+    )
+
+    occurrences = []
+    if tanggal_selesai >= tanggal_mulai:
+        current_date = tanggal_mulai
+        while current_date <= tanggal_selesai:
+            occurrences.append(current_date)
+            current_date += timedelta(days=7)
+        day_names = ("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu")
+        occurrence_preview = pd.DataFrame(
+            {
+                "Hari": [day_names[occurrence.weekday()] for occurrence in occurrences],
+                "Tanggal": [occurrence.strftime("%d-%m-%Y") for occurrence in occurrences],
+            }
+        )
+        st.caption(f"Jadwal berulang setiap hari {day_names[tanggal_mulai.weekday()]}")
+        st.dataframe(occurrence_preview, hide_index=True, use_container_width=True)
+    else:
+        st.warning("Tanggal Selesai harus setelah atau sama dengan Tanggal Mulai.")
+
     with st.form("weekly_booking_form", clear_on_submit=False):
         nama = st.text_input("Nama Pemesan")
         subdir = st.text_input("Sub Direktorat")
         floor = st.selectbox("Lantai", ["19"])
         ruang_meeting = st.selectbox("Ruang Meeting", MEETING_ROOMS)
-        day = st.selectbox("Day (Pastikan Day sesuai dengan Tanggal Mulai)", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])
-        tanggal_mulai = st.date_input(
-            "Tanggal Mulai (Pastikan Tanggal Mulai sesuai dengan Day)",
-            value=date.today(),
-            min_value=BOOKING_START_DATE,
-            max_value=BOOKING_END_DATE,
-        )
-        tanggal_selesai = st.date_input(
-            "Tanggal Selesai",
-            value=date.today(),
-            min_value=BOOKING_START_DATE,
-            max_value=BOOKING_END_DATE,
-        )
         col_a, col_b = st.columns(2)
         with col_a:
             waktu_mulai = st.time_input("Waktu Mulai", value=time(9, 0))
@@ -447,22 +465,6 @@ def booking_weekly_page() -> None:
                     st.error(err)
                 st.stop()
 
-            day_map = { "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3, "Friday": 4 }
-            target_weekday = day_map[day]
-
-            # buat list tanggal yang cocok dengan day antara start..end
-            occurrences = []
-            cur = tanggal_mulai
-            from datetime import timedelta
-            while cur <= tanggal_selesai:
-                if cur.weekday() == target_weekday:
-                    occurrences.append(cur)
-                cur += timedelta(days=1)
-
-            if not occurrences:
-                st.error("Tidak ada tanggal yang cocok dengan pilihan Day dalam rentang tanggal.")
-                st.stop()
-
             # cek konflik untuk masing-masing tanggal
             conflicts = []
             for d in occurrences:
@@ -492,7 +494,7 @@ def booking_weekly_page() -> None:
                             "keterangan": keterangan,
                         }
                     ).execute()
-                st.success(f"Berhasil membuat {len(occurrences)} jadwal weekly untuk day {day}.")
+                st.success(f"Berhasil membuat {len(occurrences)} jadwal weekly.")
                 st.session_state.page = "list"
                 st.rerun()
             except Exception as err:
